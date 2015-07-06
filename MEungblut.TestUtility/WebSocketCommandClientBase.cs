@@ -20,11 +20,14 @@
 
         private List<object> messages;
 
-        private readonly ManualResetEvent socketConnectedEvent; 
+        private readonly ManualResetEvent socketConnectedEvent;
 
-        protected WebSocketCommandClientBase(string websocketLocationUrl)
+        private string webSocketLocation;
+
+        protected WebSocketCommandClientBase(string apiLocation, string webSocketLocation)
         {
-            this.uri = websocketLocationUrl;
+            this.webSocketLocation = webSocketLocation;
+            this.uri = apiLocation;
             this.messages = new List<object>();
             this.httpCommunicator = new HttpCommunicator();
             this.converter = new CamelCaseJsonConverter();
@@ -35,13 +38,11 @@
 
         private void ConnectWebsocket()
         {
-            var websocketLocation = "ws://" + this.GetWebsocketEndpoint().Result;
-
-            Console.WriteLine("About to connect to main socket at " + websocketLocation);
+            Console.WriteLine("About to connect to main socket at " + webSocketLocation);
 
             this.websocket = new WebSocket4NetSocketClient();
             this.websocket.MessageReceived += this.WebsocketMessageReceived;
-            this.websocket.Connect(websocketLocation);
+            this.websocket.Connect(webSocketLocation);
 
             Task.Factory.StartNew(this.WaitForSocketToConnect);
 
