@@ -3,18 +3,15 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net.Http;
     using System.Net.WebSockets;
     using System.Threading;
     using System.Threading.Tasks;
 
     using MEungblut.Websockets.Client;
 
-    public abstract class WebSocketCommandClientBase
+    public abstract class WebSocketEventListener
     {
-        private readonly string uri;
         private readonly CamelCaseJsonConverter converter;
-        private readonly HttpCommunicator httpCommunicator;
 
         private IClientWebSocket websocket;
 
@@ -24,12 +21,10 @@
 
         private string webSocketLocation;
 
-        protected WebSocketCommandClientBase(string apiLocation, string webSocketLocation)
+        protected WebSocketEventListener(string webSocketLocation)
         {
             this.webSocketLocation = webSocketLocation;
-            this.uri = apiLocation;
             this.messages = new List<object>();
-            this.httpCommunicator = new HttpCommunicator();
             this.converter = new CamelCaseJsonConverter();
             this.socketConnectedEvent = new ManualResetEvent(false);
 
@@ -60,12 +55,6 @@
             this.socketConnectedEvent.Set();
         }
 
-        private async Task<string> GetWebsocketEndpoint()
-        {
-            HttpResponse webSocketLocationResponse = await this.httpCommunicator.Get(new HttpRequest(string.Empty, new Uri(this.uri + "/websocket/configuration")));
-            return webSocketLocationResponse.Body;
-        }
-
         void WebsocketMessageReceived(object sender, string e)
         {
             Console.WriteLine("Received websocket message: " + e);
@@ -82,22 +71,6 @@
             this.websocket.SendMessage(subscriptionMessage.GetMessageToSend());
         }
 
-        public async Task<TExpectedResponseType> SendCommandAndWaitForResponseOfType<TExpectedResponseType>(ApiMessage argumentsToSend, TimeSpan timeAfterWhichToStopWaiting) where TExpectedResponseType : class
-        {
-            this.messages = new List<object>();
-
-            await this.SendRequestToApi(argumentsToSend);
-
-            return this.WaitForMessageOfType<TExpectedResponseType>(timeAfterWhichToStopWaiting);
-        }
-
-        public async void SendCommand(ApiMessage argumentsToSend)
-        {
-            this.messages = new List<object>();
-
-            await this.SendRequestToApi(argumentsToSend);
-        }
-
         public TExpectedResponseType WaitForMessageOfType<TExpectedResponseType>(TimeSpan timeAfterWhichToStopWaiting) where TExpectedResponseType : class
         {
             DateTime startDate = DateTime.Now;
@@ -108,20 +81,6 @@
             }
 
             return this.messages.OfType<TExpectedResponseType>().First();
-        }
-
-        protected async Task<HttpResponse> SendRequestToApi(ApiMessage apiMessage)
-        {
-            var urlToSendRequestTo = new Uri(this.uri + apiMessage.UrlFragmentToSendTo);
-
-            var client = new HttpClient();
-
-            if (apiMessage.HttpVerb == HttpVerb.Put)
-                await client.PutAsync(urlToSendRequestTo, apiMessage.BodyAsStringContent());
-            else
-                await client.PostAsync(urlToSendRequestTo, apiMessage.BodyAsStringContent());
-
-            return null;
         }
 
         private object ConvertMessageToContractType(string websocketMessage)
