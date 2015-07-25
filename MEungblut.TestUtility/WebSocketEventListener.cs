@@ -83,6 +83,18 @@
             return this.messages.OfType<TExpectedResponseType>().First();
         }
 
+        public TExpectedResponseType WaitForMessageOfType<TExpectedResponseType>(TimeSpan timeAfterWhichToStopWaiting, Func<TExpectedResponseType, bool> expressionToMatch) where TExpectedResponseType : class
+        {
+            DateTime startDate = DateTime.Now;
+            while (!this.messages.OfType<TExpectedResponseType>().Any(expressionToMatch))
+            {
+                Thread.Sleep(100);
+                if (DateTime.Now.Subtract(timeAfterWhichToStopWaiting) > startDate) throw new ExpectedResponseTypeNotReceivedWithinTimeoutException();
+            }
+
+            return this.messages.OfType<TExpectedResponseType>().First(expressionToMatch);
+        }
+
         private object ConvertMessageToContractType(string websocketMessage)
         {
             string[] splitMessage = websocketMessage.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
