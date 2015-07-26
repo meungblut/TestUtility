@@ -1,4 +1,4 @@
-﻿namespace MEungblut.TestUtility
+﻿namespace MEungblut.TestUtility 
 {
     using System;
     using System.Collections.Generic;
