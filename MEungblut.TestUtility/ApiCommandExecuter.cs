@@ -18,16 +18,16 @@
             await this.SendRequestToApi(argumentsToSend);
         }
 
-        protected async Task SendRequestToApi(ApiMessage apiMessage)
+        protected async Task<HttpResponseMessage> SendRequestToApi(ApiMessage apiMessage)
         {
             var urlToSendRequestTo = new Uri(this.uri + apiMessage.UrlFragmentToSendTo);
 
             var client = new HttpClient();
 
             if (apiMessage.HttpVerb == HttpVerb.Put)
-                await client.PutAsync(urlToSendRequestTo, apiMessage.BodyAsStringContent());
-            else
-                await client.PostAsync(urlToSendRequestTo, apiMessage.BodyAsStringContent());
+                return await client.PutAsync(urlToSendRequestTo, apiMessage.BodyAsStringContent());
+
+            return await client.PostAsync(urlToSendRequestTo, apiMessage.BodyAsStringContent());
         }
     }
 }
