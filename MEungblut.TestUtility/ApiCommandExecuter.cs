@@ -28,6 +28,6 @@
                 return await client.PutAsync(urlToSendRequestTo, apiMessage.BodyAsStringContent());
 
             return await client.PostAsync(urlToSendRequestTo, apiMessage.BodyAsStringContent());
-        }
+        } 
     }
 }
