@@ -13,9 +13,9 @@
             this.uri = apiLocation;
         }
 
-        public async void SendCommand(ApiMessage argumentsToSend)
+        public async Task<HttpResponseMessage> SendCommand(ApiMessage argumentsToSend)
         {
-            await this.SendRequestToApi(argumentsToSend);
+            return await this.SendRequestToApi(argumentsToSend);
         }
 
         protected async Task<HttpResponseMessage> SendRequestToApi(ApiMessage apiMessage)
